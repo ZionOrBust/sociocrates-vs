@@ -1,0 +1,48 @@
+{
+  "name": "sociocrates",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Sociocrates.com - Collaborative decision-making platform implementing the 7-step sociocratic process",
+  "license": "MIT",
+  "scripts": {
+    "dev": "cd client && npm run dev",
+    "build": "cd client && npm run build && cd .. && npm run build:server",
+    "build:server": "esbuild client/server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "preview": "cd client && npm run preview",
+    "start": "NODE_ENV=production node dist/index.js",
+    "check": "cd client && npm run check",
+    "db:generate": "cd client && npm run db:generate",
+    "db:push": "cd client && npm run db:push",
+    "db:migrate": "cd client && npm run db:migrate",
+    "db:studio": "cd client && npm run db:studio",
+    "deploy": "npm run build && npm run db:push",
+    "vercel-build": "npm install && cd client && npm install && npm run build && cd .. && npm run build:server"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "bcryptjs": "^2.4.3",
+    "connect-pg-simple": "^10.0.0",
+    "drizzle-orm": "^0.39.1",
+    "drizzle-zod": "^0.7.0",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "jsonwebtoken": "^9.0.2",
+    "nanoid": "^5.1.5",
+    "node-cron": "^4.2.1",
+    "ws": "^8.18.0",
+    "zod": "^3.24.2",
+    "zod-validation-error": "^3.4.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/connect-pg-simple": "^7.0.3",
+    "@types/express": "4.17.21",
+    "@types/express-session": "^1.18.0",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "20.16.11",
+    "@types/ws": "^8.5.13",
+    "@vercel/node": "^5.3.13",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.9.2"
+  }
+}
