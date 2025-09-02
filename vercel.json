@@ -1,18 +1,17 @@
 {
   "version": 2,
-  "buildCommand": "npm run vercel-build",
-  "outputDirectory": "client/dist",
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index.js"
+    { "handle": "filesystem" },
+    { "src": "/.*", "dest": "/index.html" }
+  ],
+  "functions": {
+    "api/[...all].ts": {
+      "maxDuration": 30,
+      "includeFiles": "server/**"
     },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+    "api/debug/imports.ts": {
+      "maxDuration": 10,
+      "includeFiles": "server/**"
     }
-  ]
+  }
 }
