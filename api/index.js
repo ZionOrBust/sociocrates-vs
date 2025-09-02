@@ -5,8 +5,8 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-pro
 
 // Simple demo data store (in-memory)
 const users = [
-  { id: '1', email: 'admin@sociocracy.org', password: 'password', name: 'Admin User', role: 'admin' },
-  { id: '2', email: 'demo@sociocracy.org', password: 'password', name: 'Demo User', role: 'participant' }
+  { id: '1', email: 'admin@sociocracy.org', password: 'password', name: 'Admin User', role: 'admin', isActive: true, createdAt: new Date().toISOString() },
+  { id: '2', email: 'demo@sociocracy.org', password: 'password', name: 'Demo User', role: 'participant', isActive: false, createdAt: new Date().toISOString() }
 ];
 
 // Demo circles data
@@ -179,7 +179,7 @@ app.post('/proposals', authenticateToken, (req, res) => {
     description,
     circleId,
     createdBy: req.user.id,
-    status: 'draft',
+    status: 'active',
     currentStep: 'proposal_presentation',
     isActive: true,
     createdAt: new Date().toISOString(),
@@ -240,7 +240,7 @@ app.get('/admin/users', authenticateToken, (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ message: 'Admin access required' });
   }
-  res.json(users.map(u => ({ id: u.id, email: u.email, name: u.name, role: u.role })));
+  res.json(users.map(u => ({ id: u.id, email: u.email, name: u.name, role: u.role, isActive: !!u.isActive, createdAt: u.createdAt })));
 });
 
 app.get('/admin/users/:id', authenticateToken, (req, res) => {
@@ -266,8 +266,8 @@ app.put('/admin/users/:id', authenticateToken, (req, res) => {
     return res.status(404).json({ message: 'User not found' });
   }
 
-  const { name, email, role } = req.body;
-  users[userIndex] = { ...users[userIndex], name, email, role };
+  const { name, email, role, isActive } = req.body;
+  users[userIndex] = { ...users[userIndex], name, email, role, isActive: typeof isActive === 'boolean' ? isActive : users[userIndex].isActive };
 
   res.json({ id: users[userIndex].id, email: users[userIndex].email, name: users[userIndex].name, role: users[userIndex].role });
 });
