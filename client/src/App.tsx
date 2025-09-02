@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Proposal from './pages/Proposal';
 import Admin from './pages/Admin';
 import CreateProposal from './pages/CreateProposal';
+import Circle from './pages/Circle';
 import Navigation from './components/Navigation';
 import { Toaster } from './components/ui/toaster';
 
@@ -42,6 +43,7 @@ function AppContent() {
           <Route path="/" component={Dashboard} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/proposal/:id" component={Proposal} />
+          <Route path="/circle/:id" component={Circle} />
           <Route path="/create-proposal" component={CreateProposal} />
           {user.role === 'admin' && <Route path="/admin" component={Admin} />}
           <Route>
