@@ -62,6 +62,21 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
+// Normalize Vercel prefix so '/api/...'(rewrite) and '/api/index.js/...'(dest) map to our Express routes
+app.use((req, _res, next) => {
+  const stripPrefix = (url, prefix) => (url.startsWith(prefix) ? url.slice(prefix.length) || '/' : null);
+  let newUrl = null;
+  // Handle dest: /api/index.js/$1
+  newUrl = stripPrefix(req.url, '/api/index.js');
+  if (!newUrl) {
+    // Handle generic /api/*
+    newUrl = stripPrefix(req.url, '/api');
+  }
+  if (newUrl) {
+    req.url = newUrl;
+  }
+  next();
+});
 
 // Middleware to verify JWT token
 const authenticateToken = (req, res, next) => {
