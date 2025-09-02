@@ -202,9 +202,11 @@ export default function Dashboard() {
                         Created {formatDateTime(circle.createdAt)}
                       </span>
                       <div className="space-x-2">
-                        <Button size="sm" variant="outline">
-                          View Circle
-                        </Button>
+                        <Link href={`/circle/${circle.id}`}>
+                          <Button size="sm" variant="outline">
+                            View Circle
+                          </Button>
+                        </Link>
                       </div>
                     </div>
                   </CardContent>
