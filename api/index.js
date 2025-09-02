@@ -62,6 +62,15 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
+// Normalize Vercel /api prefix so '/auth/login' works when called as '/api/auth/login'
+app.use((req, _res, next) => {
+  if (req.url.startsWith('/api/')) {
+    req.url = req.url.slice(4);
+  } else if (req.url === '/api') {
+    req.url = '/';
+  }
+  next();
+});
 
 // Middleware to verify JWT token
 const authenticateToken = (req, res, next) => {
