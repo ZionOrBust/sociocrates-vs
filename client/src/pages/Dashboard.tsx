@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { useAuth, useApi } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
@@ -22,6 +22,7 @@ interface Proposal {
   stepEndTime: string | null;
   createdAt: string;
   createdBy: string;
+  isActive: boolean;
 }
 
 export default function Dashboard() {
@@ -30,6 +31,7 @@ export default function Dashboard() {
   const [circles, setCircles] = useState<Circle[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,7 +63,7 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
-  const activeProposals = proposals.filter(p => p.status === 'active');
+  const activeProposals = proposals.filter(p => (typeof p.isActive === 'boolean' ? p.isActive : (p.status !== 'resolved' && p.status !== 'archived')));
   const pendingProposals = proposals.filter(p => p.status === 'pending_consent');
   const myProposals = proposals.filter(p => p.createdBy === user?.id);
 
@@ -82,12 +84,10 @@ export default function Dashboard() {
             Welcome back, {user?.name}. Here's what's happening in your circles.
           </p>
         </div>
-        <Link href="/create-proposal">
-          <Button className="flex items-center space-x-2">
-            <Plus className="w-4 h-4" />
-            <span>New Proposal</span>
-          </Button>
-        </Link>
+        <Button className="flex items-center space-x-2" onClick={() => setLocation('/create-proposal')}>
+          <Plus className="w-4 h-4" />
+          <span>New Proposal</span>
+        </Button>
       </div>
 
       {/* Quick Stats */}
@@ -164,11 +164,9 @@ export default function Dashboard() {
                       <span>{formatDateTime(proposal.createdAt)}</span>
                     </div>
                     <div className="mt-3 flex justify-end">
-                      <Link href={`/proposal/${proposal.id}`}>
-                        <Button size="sm">
-                          View Details
-                        </Button>
-                      </Link>
+                      <Button size="sm" onClick={() => setLocation(`/proposal/${proposal.id}`)}>
+                        View Details
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -202,11 +200,9 @@ export default function Dashboard() {
                         Created {formatDateTime(circle.createdAt)}
                       </span>
                       <div className="space-x-2">
-                        <Link href={`/circle/${circle.id}`}>
-                          <Button size="sm" variant="outline">
-                            View Circle
-                          </Button>
-                        </Link>
+                        <Button size="sm" variant="outline" onClick={() => setLocation(`/circles/${circle.id}`)}>
+                          View Circle
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
