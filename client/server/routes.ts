@@ -74,14 +74,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/auth/login', async (req, res) => {
     try {
       const { email, password } = req.body;
-      
-      const user = await storage.validateUser(email, password);
+
+      // Auto-provision demo users if they don't exist yet
+      const demoUsers: Record<string, { name: string; role: 'admin' | 'participant' } > = {
+        'admin@sociocracy.org': { name: 'Admin User', role: 'admin' },
+        'demo@sociocracy.org': { name: 'Demo User', role: 'participant' },
+      };
+
+      let user = await storage.validateUser(email, password);
+      if (!user && demoUsers[email] && password === 'password') {
+        const ensured = await storage.createUser({
+          email,
+          password: 'password',
+          name: demoUsers[email].name,
+          role: demoUsers[email].role,
+          isActive: true,
+        } as any);
+        user = await storage.validateUser(email, password);
+      }
+
       if (!user) {
         return res.status(401).json({ message: 'Invalid credentials' });
       }
-      
+
       const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
-      
+
       res.json({
         user: { id: user.id, email: user.email, name: user.name, role: user.role },
         token
@@ -106,13 +123,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Circle routes
   app.get('/api/circles', authenticateToken, async (req, res) => {
     try {
-      let circles;
+      let list;
       if (req.user!.role === 'admin') {
-        circles = await storage.getAllCircles();
+        list = await storage.getAllCircles();
+        // Seed defaults if none exist
+        if (!list || list.length === 0) {
+          const main = await storage.createCircle({
+            name: 'Main Circle',
+            description: 'Primary decision-making circle for our community',
+            createdBy: req.user!.id,
+            isActive: true,
+          } as any);
+          const housing = await storage.createCircle({
+            name: 'Housing Circle',
+            description: 'Decisions related to housing and infrastructure',
+            createdBy: req.user!.id,
+            isActive: true,
+          } as any);
+          list = await storage.getAllCircles();
+        }
       } else {
-        circles = await storage.getUserCircles(req.user!.id);
+        list = await storage.getUserCircles(req.user!.id);
       }
-      res.json(circles);
+      res.json(list);
     } catch (error) {
       console.error('Error fetching circles:', error);
       res.status(500).json({ message: 'Failed to fetch circles' });
