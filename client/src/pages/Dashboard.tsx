@@ -187,9 +187,13 @@ export default function Dashboard() {
               </Card>
             ) : (
               circles.map((circle) => (
-                <Card key={circle.id} className="hover:shadow-md transition-shadow">
+                <Card key={circle.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setLocation(`/circles/${circle.id}`)}>
                   <CardHeader>
-                    <CardTitle className="text-lg">{circle.name}</CardTitle>
+                    <CardTitle className="text-lg">
+                      <Link href={`/circles/${circle.id}`} className="text-blue-600 hover:underline">
+                        {circle.name}
+                      </Link>
+                    </CardTitle>
                     <CardDescription className="line-clamp-2">
                       {circle.description}
                     </CardDescription>
@@ -200,7 +204,7 @@ export default function Dashboard() {
                         Created {formatDateTime(circle.createdAt)}
                       </span>
                       <div className="space-x-2">
-                        <Button size="sm" variant="outline" onClick={() => setLocation(`/circles/${circle.id}`)}>
+                        <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setLocation(`/circles/${circle.id}`); }}>
                           View Circle
                         </Button>
                       </div>
