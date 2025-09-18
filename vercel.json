@@ -4,6 +4,11 @@
   "outputDirectory": "client/dist",
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/index.js" },
+    { "src": "/dashboard", "status": 308, "headers": { "Location": "/#/dashboard" } },
+    { "src": "/circles/(.*)", "status": 308, "headers": { "Location": "/#/circles/$1" } },
+    { "src": "/proposal/(.*)", "status": 308, "headers": { "Location": "/#/proposal/$1" } },
+    { "src": "/create-proposal", "status": 308, "headers": { "Location": "/#/create-proposal" } },
+    { "src": "/admin", "status": 308, "headers": { "Location": "/#/admin" } },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
