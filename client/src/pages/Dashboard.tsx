@@ -190,9 +190,9 @@ export default function Dashboard() {
                 <Card key={circle.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setLocation(`/circles/${circle.id}`)}>
                   <CardHeader>
                     <CardTitle className="text-lg">
-                      <Link href={`/circles/${circle.id}`} className="text-blue-600 hover:underline">
+                      <a href={`#/circles/${circle.id}`} className="text-blue-600 hover:underline" onClick={(e) => { e.preventDefault(); setLocation(`/circles/${circle.id}`); }}>
                         {circle.name}
-                      </Link>
+                      </a>
                     </CardTitle>
                     <CardDescription className="line-clamp-2">
                       {circle.description}
@@ -204,8 +204,8 @@ export default function Dashboard() {
                         Created {formatDateTime(circle.createdAt)}
                       </span>
                       <div className="space-x-2">
-                        <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setLocation(`/circles/${circle.id}`); }}>
-                          View Circle
+                        <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setLocation(`/circles/${circle.id}`); }} asChild>
+                          <a href={`#/circles/${circle.id}`}>View Circle</a>
                         </Button>
                       </div>
                     </div>
