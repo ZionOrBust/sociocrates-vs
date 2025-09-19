@@ -4,6 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import './index.css';
 
+// Deployment marker: log boot time to help verify client bundle
+const __APP_BOOT_TIME__ = new Date().toISOString();
+console.log('Client booted at', __APP_BOOT_TIME__);
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
