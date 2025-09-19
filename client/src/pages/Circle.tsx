@@ -1,8 +1,8 @@
-import { useParams, Link } from 'wouter';
-import { useEffect, useState } from 'react';
-import { useApi } from '../contexts/AuthContext';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
+import React, { useEffect, useState } from 'react';
+import { Link, useParams } from 'wouter';
+import { useApi, useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
 import { formatDateTime, getStepName } from '../lib/utils';
 
 interface Circle {
@@ -18,37 +18,45 @@ interface Proposal {
   description: string;
   status: string;
   currentStep: string;
+  stepEndTime: string | null;
   createdAt: string;
+  createdBy: string;
+  isActive: boolean;
 }
 
 export default function CirclePage() {
   const { id } = useParams<{ id: string }>();
   const { apiCall } = useApi();
+  const { user } = useAuth();
+
   const [circle, setCircle] = useState<Circle | null>(null);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!id) return;
       try {
-        const [c, ps] = await Promise.all([
+        const [circleData, circleProposals] = await Promise.all([
           apiCall(`/circles/${id}`),
-          apiCall(`/circles/${id}/proposals`)
+          apiCall(`/circles/${id}/proposals`),
         ]);
-        setCircle(c);
-        setProposals(ps);
-      } catch (e) {
-        // noop
+        setCircle(circleData);
+        setProposals(circleProposals);
+      } catch (error) {
+        console.error('Failed to load circle data:', error);
       } finally {
         setLoading(false);
       }
     };
-    if (id) fetchData();
+    fetchData();
   }, [id]);
+
+  const myProposals = proposals.filter(p => p.createdBy === user?.id);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[300px]">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-lg">Loading circle...</div>
       </div>
     );
@@ -63,47 +71,90 @@ export default function CirclePage() {
     );
   }
 
-  return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">{circle.name}</CardTitle>
-          <CardDescription>{circle.description}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-500">Created {formatDateTime(circle.createdAt)}</p>
-        </CardContent>
-      </Card>
+  const activeProposals = proposals.filter(p => (typeof p.isActive === 'boolean' ? p.isActive : (p.status !== 'resolved' && p.status !== 'archived')));
 
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Proposals</h2>
-        <div className="space-y-4">
-          {proposals.length === 0 ? (
-            <Card>
-              <CardContent className="p-6 text-center text-gray-500">No proposals in this circle yet</CardContent>
-            </Card>
-          ) : (
-            proposals.map((p) => (
-              <Card key={p.id} className="hover:shadow-sm">
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-gray-900">{p.title}</h3>
-                    <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-800">{p.status}</span>
-                  </div>
-                  <p className="text-sm text-gray-600 line-clamp-2 mb-3">{p.description}</p>
-                  <div className="flex justify-between items-center text-sm text-gray-500">
-                    <span>Current: {getStepName(p.currentStep)}</span>
-                    <span>{formatDateTime(p.createdAt)}</span>
-                  </div>
-                  <div className="mt-3 flex justify-end">
-                    <Link href={`/proposal/${p.id}`}>
-                      <Button size="sm">View Details</Button>
-                    </Link>
-                  </div>
+  return (
+    <div className="space-y-8">
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">{circle.name}</h1>
+          {circle.description && (
+            <p className="text-gray-600 mt-1">{circle.description}</p>
+          )}
+        </div>
+        <Button asChild>
+          <Link href="/create-proposal">New Proposal</Link>
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Active Proposals</h2>
+          <div className="space-y-4">
+            {activeProposals.length === 0 ? (
+              <Card>
+                <CardContent className="p-6 text-center text-gray-500">
+                  No active proposals in this circle
                 </CardContent>
               </Card>
-            ))
-          )}
+            ) : (
+              activeProposals.map((proposal) => (
+                <Card key={proposal.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-semibold text-lg text-gray-900 line-clamp-1">
+                        {proposal.title}
+                      </h3>
+                      <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                        {proposal.status}
+                      </span>
+                    </div>
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                      {proposal.description}
+                    </p>
+                    <div className="flex justify-between items-center text-sm text-gray-500">
+                      <span>Current: {getStepName(proposal.currentStep)}</span>
+                      <span>{formatDateTime(proposal.createdAt)}</span>
+                    </div>
+                    <div className="mt-3 flex justify-end">
+                      <Button asChild size="sm">
+                        <Link href={`/proposal/${proposal.id}`}>View Details</Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">My Proposals</h2>
+          <div className="space-y-4">
+            {myProposals.length === 0 ? (
+              <Card>
+                <CardContent className="p-6 text-center text-gray-500">
+                  You haven't created any proposals in this circle yet
+                </CardContent>
+              </Card>
+            ) : (
+              myProposals.map((proposal) => (
+                <Card key={proposal.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="text-lg">{proposal.title}</CardTitle>
+                    <CardDescription>{formatDateTime(proposal.createdAt)}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex justify-end">
+                      <Button asChild size="sm" variant="outline">
+                        <Link href={`/proposal/${proposal.id}`}>Open</Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>
