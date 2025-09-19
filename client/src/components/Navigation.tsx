@@ -27,36 +27,36 @@ export default function Navigation() {
             </Link>
             
             <div className="hidden md:ml-8 md:flex md:space-x-4">
+              <Button asChild
+              variant={isActive('/dashboard') || location === '/' ? "default" : "ghost"}
+              className="flex items-center space-x-2"
+            >
               <Link href="/dashboard">
-                <Button 
-                  variant={isActive('/dashboard') || location === '/' ? "default" : "ghost"}
-                  className="flex items-center space-x-2"
-                >
-                  <FileText className="w-4 h-4" />
-                  <span>Dashboard</span>
-                </Button>
+                <FileText className="w-4 h-4" />
+                <span>Dashboard</span>
               </Link>
+            </Button>
               
-              <Link href="/create-proposal">
-                <Button 
-                  variant={isActive('/create-proposal') ? "default" : "ghost"}
-                  className="flex items-center space-x-2"
-                >
+              <Button asChild
+                variant={isActive('/create-proposal') ? "default" : "ghost"}
+                className="flex items-center space-x-2"
+              >
+                <Link href="/create-proposal">
                   <Plus className="w-4 h-4" />
                   <span>New Proposal</span>
-                </Button>
-              </Link>
+                </Link>
+              </Button>
               
               {user?.role === 'admin' && (
-                <Link href="/admin">
-                  <Button 
-                    variant={isActive('/admin') ? "default" : "ghost"}
-                    className="flex items-center space-x-2"
-                  >
+                <Button asChild
+                  variant={isActive('/admin') ? "default" : "ghost"}
+                  className="flex items-center space-x-2"
+                >
+                  <Link href="/admin">
                     <Settings className="w-4 h-4" />
                     <span>Admin</span>
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               )}
             </div>
           </div>
@@ -91,33 +91,27 @@ export default function Navigation() {
           </span>
         </div>
         <div className="flex space-x-2">
-          <Link href="/dashboard">
-            <Button 
-              variant={isActive('/dashboard') || location === '/' ? "default" : "ghost"}
-              size="sm"
-            >
-              Dashboard
-            </Button>
-          </Link>
+          <Button asChild
+            variant={isActive('/dashboard') || location === '/' ? "default" : "ghost"}
+            size="sm"
+          >
+            <Link href="/dashboard">Dashboard</Link>
+          </Button>
           
-          <Link href="/create-proposal">
-            <Button 
-              variant={isActive('/create-proposal') ? "default" : "ghost"}
-              size="sm"
-            >
-              New Proposal
-            </Button>
-          </Link>
+          <Button asChild
+            variant={isActive('/create-proposal') ? "default" : "ghost"}
+            size="sm"
+          >
+            <Link href="/create-proposal">New Proposal</Link>
+          </Button>
           
           {user?.role === 'admin' && (
-            <Link href="/admin">
-              <Button 
-                variant={isActive('/admin') ? "default" : "ghost"}
-                size="sm"
-              >
-                Admin
-              </Button>
-            </Link>
+            <Button asChild
+              variant={isActive('/admin') ? "default" : "ghost"}
+              size="sm"
+            >
+              <Link href="/admin">Admin</Link>
+            </Button>
           )}
         </div>
       </div>
