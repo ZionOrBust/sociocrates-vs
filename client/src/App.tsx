@@ -1,5 +1,6 @@
 import React from 'react';
 import { Router, Route, Switch } from 'wouter';
+import { useEffect, useState } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { useAuth } from './contexts/AuthContext';
 import Login from './pages/Login';
@@ -40,12 +41,12 @@ function AppContent() {
       <Navigation />
       <main className="container mx-auto px-4 py-8">
         <Switch>
-          <Route path="/" component={Dashboard} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/proposal/:id" component={Proposal} />
-          <Route path="/circle/:id" component={Circle} />
           <Route path="/create-proposal" component={CreateProposal} />
+          <Route path="/circles/:id" component={Circle} />
           {user.role === 'admin' && <Route path="/admin" component={Admin} />}
+          <Route path="/" component={Dashboard} />
           <Route>
             <div className="text-center py-8">
               <h1 className="text-2xl font-bold text-gray-900">Page Not Found</h1>
@@ -59,9 +60,25 @@ function AppContent() {
   );
 }
 
+// Hash-based routing to avoid base path issues in embedded environments
+function useHashLocation() {
+  const getHash = () => window.location.hash.replace(/^#/, '') || '/';
+  const [loc, setLoc] = useState(getHash());
+  useEffect(() => {
+    const handler = () => setLoc(getHash());
+    window.addEventListener('hashchange', handler);
+    return () => window.removeEventListener('hashchange', handler);
+  }, []);
+  const navigate = (to: string) => {
+    if (!to.startsWith('/')) to = '/' + to;
+    window.location.hash = to;
+  };
+  return [loc, navigate] as const;
+}
+
 function App() {
   return (
-    <Router>
+    <Router hook={useHashLocation}>
       <AuthProvider>
         <AppContent />
       </AuthProvider>
