@@ -1,6 +1,6 @@
 {
   "name": "sociocrates",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "Sociocrates.com - Collaborative decision-making platform implementing the 7-step sociocratic process",
   "license": "MIT",
