@@ -19,6 +19,8 @@ function toCamel(row) {
     step_start_time: 'stepStartTime',
     step_end_time: 'stepEndTime',
     is_active: 'isActive',
+    user_id: 'userId',
+    proposal_id: 'proposalId',
   };
   const out = {};
   for (const k of Object.keys(row)) out[map[k] || k] = row[k];
@@ -259,9 +261,25 @@ app.get('/proposals/:proposalId/questions', authenticateToken, (_req, res) => re
 app.post('/proposals/:proposalId/questions', authenticateToken, (req, res) => {
   const { question } = req.body; res.json({ id: '1', proposalId: req.params.proposalId, userId: req.user.id, question, createdAt: new Date().toISOString() });
 });
-app.get('/proposals/:proposalId/reactions', authenticateToken, (_req, res) => res.json([]));
-app.post('/proposals/:proposalId/reactions', authenticateToken, (req, res) => {
-  const { reaction } = req.body; res.json({ id: '1', proposalId: req.params.proposalId, userId: req.user.id, reaction, createdAt: new Date().toISOString() });
+app.get('/proposals/:proposalId/reactions', authenticateToken, async (req, res) => {
+  try {
+    const rows = await sql`select id, proposal_id, user_id, reaction, created_at from quick_reactions where proposal_id = ${req.params.proposalId} order by created_at asc`;
+    res.json(rows.map(toCamel));
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch reactions' });
+  }
+});
+app.post('/proposals/:proposalId/reactions', authenticateToken, async (req, res) => {
+  try {
+    const { reaction } = req.body;
+    if (!reaction || typeof reaction !== 'string' || reaction.length > 300) {
+      return res.status(400).json({ message: 'Reaction is required (max 300 chars)' });
+    }
+    const rows = await sql`insert into quick_reactions (proposal_id, user_id, reaction) values (${req.params.proposalId}, ${req.user.id}, ${reaction}) returning id, proposal_id, user_id, reaction, created_at`;
+    res.json(toCamel(rows[0]));
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to add reaction' });
+  }
 });
 app.get('/proposals/:proposalId/objections', authenticateToken, (_req, res) => res.json([]));
 app.post('/proposals/:proposalId/objections', authenticateToken, (req, res) => {
