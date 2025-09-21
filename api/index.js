@@ -257,9 +257,23 @@ app.post('/proposals/:id/advance', authenticateToken, async (req, res) => {
 });
 
 // Proposal process endpoints (simplified stubs for now)
-app.get('/proposals/:proposalId/questions', authenticateToken, (_req, res) => res.json([]));
-app.post('/proposals/:proposalId/questions', authenticateToken, (req, res) => {
-  const { question } = req.body; res.json({ id: '1', proposalId: req.params.proposalId, userId: req.user.id, question, createdAt: new Date().toISOString() });
+app.get('/proposals/:proposalId/questions', authenticateToken, async (req, res) => {
+  try {
+    const rows = await sql`select id, proposal_id, user_id, question, created_at from clarifying_questions where proposal_id = ${req.params.proposalId} order by created_at asc`;
+    res.json(rows.map(toCamel));
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch questions' });
+  }
+});
+app.post('/proposals/:proposalId/questions', authenticateToken, async (req, res) => {
+  try {
+    const { question } = req.body;
+    if (!question || typeof question !== 'string') return res.status(400).json({ message: 'Question is required' });
+    const rows = await sql`insert into clarifying_questions (proposal_id, user_id, question) values (${req.params.proposalId}, ${req.user.id}, ${question}) returning id, proposal_id, user_id, question, created_at`;
+    res.json(toCamel(rows[0]));
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to add question' });
+  }
 });
 app.get('/proposals/:proposalId/reactions', authenticateToken, async (req, res) => {
   try {
@@ -281,13 +295,44 @@ app.post('/proposals/:proposalId/reactions', authenticateToken, async (req, res)
     res.status(500).json({ message: 'Failed to add reaction' });
   }
 });
-app.get('/proposals/:proposalId/objections', authenticateToken, (_req, res) => res.json([]));
-app.post('/proposals/:proposalId/objections', authenticateToken, (req, res) => {
-  const { objection, severity } = req.body; res.json({ id: '1', proposalId: req.params.proposalId, userId: req.user.id, objection, severity, isResolved: false, createdAt: new Date().toISOString() });
+app.get('/proposals/:proposalId/objections', authenticateToken, async (req, res) => {
+  try {
+    const rows = await sql`select id, proposal_id, user_id, objection, severity, is_resolved, created_at from objections where proposal_id = ${req.params.proposalId} order by created_at asc`;
+    res.json(rows.map(toCamel));
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch objections' });
+  }
 });
-app.get('/proposals/:proposalId/consent', authenticateToken, (_req, res) => res.json([]));
-app.post('/proposals/:proposalId/consent', authenticateToken, (req, res) => {
-  const { choice, reason } = req.body; res.json({ id: '1', proposalId: req.params.proposalId, userId: req.user.id, choice, reason, createdAt: new Date().toISOString() });
+app.post('/proposals/:proposalId/objections', authenticateToken, async (req, res) => {
+  try {
+    const { objection, severity } = req.body;
+    if (!objection || typeof objection !== 'string') return res.status(400).json({ message: 'Objection is required' });
+    const validSev = ['minor_concern','major_concern','deal_breaker'];
+    if (!validSev.includes(severity)) return res.status(400).json({ message: 'Invalid severity' });
+    const rows = await sql`insert into objections (proposal_id, user_id, objection, severity) values (${req.params.proposalId}, ${req.user.id}, ${objection}, ${severity}) returning id, proposal_id, user_id, objection, severity, is_resolved, created_at`;
+    res.json(toCamel(rows[0]));
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to add objection' });
+  }
+});
+app.get('/proposals/:proposalId/consent', authenticateToken, async (req, res) => {
+  try {
+    const rows = await sql`select id, proposal_id, user_id, choice, reason, created_at from consent_responses where proposal_id = ${req.params.proposalId} order by created_at asc`;
+    res.json(rows.map(toCamel));
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch consent responses' });
+  }
+});
+app.post('/proposals/:proposalId/consent', authenticateToken, async (req, res) => {
+  try {
+    const { choice, reason } = req.body;
+    const valid = ['consent','consent_with_reservations','withhold_consent'];
+    if (!valid.includes(choice)) return res.status(400).json({ message: 'Invalid choice' });
+    const rows = await sql`insert into consent_responses (proposal_id, user_id, choice, reason) values (${req.params.proposalId}, ${req.user.id}, ${choice}, ${reason || null}) returning id, proposal_id, user_id, choice, reason, created_at`;
+    res.json(toCamel(rows[0]));
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to submit consent' });
+  }
 });
 
 // Admin users (read-only list from DB)
