@@ -132,12 +132,12 @@ export default function Proposal() {
     if (!newReaction.trim()) return;
 
     try {
-      await apiCall(`/proposals/${id}/reactions`, {
+      const created = await apiCall(`/proposals/${id}/reactions`, {
         method: 'POST',
         body: JSON.stringify({ reaction: newReaction }),
       });
       setNewReaction('');
-      fetchData();
+      setReactions((prev) => [...prev, created]);
       toast({
         title: 'Reaction submitted',
         description: 'Your reaction has been added',
