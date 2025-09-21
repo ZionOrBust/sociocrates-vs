@@ -108,12 +108,12 @@ export default function Proposal() {
     if (!newQuestion.trim()) return;
 
     try {
-      await apiCall(`/proposals/${id}/questions`, {
+      const created = await apiCall(`/proposals/${id}/questions`, {
         method: 'POST',
         body: JSON.stringify({ question: newQuestion }),
       });
       setNewQuestion('');
-      fetchData();
+      setQuestions((prev) => [...prev, { ...created }]);
       toast({
         title: 'Question submitted',
         description: 'Your clarifying question has been added',
@@ -156,16 +156,16 @@ export default function Proposal() {
     if (!newObjection.trim()) return;
 
     try {
-      await apiCall(`/proposals/${id}/objections`, {
+      const created = await apiCall(`/proposals/${id}/objections`, {
         method: 'POST',
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           objection: newObjection,
           severity: objectionSeverity
         }),
       });
       setNewObjection('');
       setObjectionSeverity('minor_concern');
-      fetchData();
+      setObjections((prev) => [...prev, created]);
       toast({
         title: 'Objection submitted',
         description: 'Your objection has been recorded',
@@ -183,15 +183,15 @@ export default function Proposal() {
     e.preventDefault();
 
     try {
-      await apiCall(`/proposals/${id}/consent`, {
+      const created = await apiCall(`/proposals/${id}/consent`, {
         method: 'POST',
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           choice: consentChoice,
           reason: consentReason || null
         }),
       });
       setConsentReason('');
-      fetchData();
+      setConsents((prev) => [...prev, created]);
       toast({
         title: 'Consent response submitted',
         description: 'Your consent decision has been recorded',
