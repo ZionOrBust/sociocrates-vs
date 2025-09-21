@@ -6,7 +6,7 @@ import { LogOut, Settings, Users, FileText, Plus } from 'lucide-react';
 
 export default function Navigation() {
   const { user, logout } = useAuth();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
 
   const isActive = (path: string) => {
     return location === path || location.startsWith(path);
@@ -71,9 +71,9 @@ export default function Navigation() {
               </span>
             </div>
             
-            <Button 
-              variant="ghost" 
-              onClick={logout}
+            <Button
+              variant="ghost"
+              onClick={() => { logout(); setLocation('/login'); }}
               className="flex items-center space-x-2"
             >
               <LogOut className="w-4 h-4" />
