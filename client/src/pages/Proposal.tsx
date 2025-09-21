@@ -281,6 +281,35 @@ export default function Proposal() {
         </CardContent>
       </Card>
 
+      {/* Admin controls for step management */}
+      {user?.role === 'admin' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Facilitator Controls</CardTitle>
+            <CardDescription>Advance or set the current step</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col sm:flex-row gap-3">
+            <Button onClick={async () => { await apiCall(`/proposals/${proposal!.id}/advance`, { method: 'POST' }); await fetchData(); }}>Advance to Next Step</Button>
+            <select
+              className="border rounded-md p-2"
+              value={proposal!.currentStep}
+              onChange={async (e) => {
+                await apiCall(`/proposals/${proposal!.id}/step`, { method: 'PUT', body: JSON.stringify({ step: (e.target as HTMLSelectElement).value }) });
+                await fetchData();
+              }}
+            >
+              <option value="proposal_presentation">Proposal Presentation</option>
+              <option value="clarifying_questions">Clarifying Questions</option>
+              <option value="quick_reactions">Quick Reactions</option>
+              <option value="objections_round">Objections Round</option>
+              <option value="resolve_objections">Resolve Objections</option>
+              <option value="consent_round">Consent Round</option>
+              <option value="record_outcome">Record Outcome</option>
+            </select>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Step-specific content */}
       {proposal.currentStep === 'clarifying_questions' && (
         <Card>
