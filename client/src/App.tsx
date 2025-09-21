@@ -29,8 +29,11 @@ function AppContent() {
       <div className="min-h-screen bg-gray-50">
         <Switch>
           <Route path="/register" component={Register} />
-          <Route path="/" component={Login} />
           <Route path="/login" component={Login} />
+          <Route path="/" component={Login} />
+          <Route>
+            <Login />
+          </Route>
         </Switch>
       </div>
     );
@@ -45,7 +48,16 @@ function AppContent() {
           <Route path="/proposal/:id" component={Proposal} />
           <Route path="/create-proposal" component={CreateProposal} />
           <Route path="/circles/:id" component={Circle} />
-          {user.role === 'admin' && <Route path="/admin" component={Admin} />}
+          {user.role === 'admin' ? (
+            <Route path="/admin" component={Admin} />
+          ) : (
+            <Route path="/admin">
+              <div className="text-center py-8">
+                <h1 className="text-2xl font-bold text-gray-900">Access Denied</h1>
+                <p className="text-gray-600 mt-2">Administrator access required.</p>
+              </div>
+            </Route>
+          )}
           <Route path="/" component={Dashboard} />
           <Route>
             <div className="text-center py-8">
