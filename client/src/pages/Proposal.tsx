@@ -289,13 +289,20 @@ export default function Proposal() {
             <CardDescription>Advance or set the current step</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col sm:flex-row gap-3">
-            <Button onClick={async () => { await apiCall(`/proposals/${proposal!.id}/advance`, { method: 'POST' }); await fetchData(); }}>Advance to Next Step</Button>
+            <Button onClick={async () => { try { const updated = await apiCall(`/proposals/${proposal!.id}/advance`, { method: 'POST' }); setProposal(updated); toast({ title: 'Step advanced', description: `Now in ${getStepName(updated.currentStep)}` }); document.getElementById('step-section')?.scrollIntoView({ behavior: 'smooth' }); } catch (e: any) { toast({ title: 'Failed to advance', description: e.message, variant: 'destructive' }); } }}>Advance to Next Step</Button>
             <select
               className="border rounded-md p-2"
               value={proposal!.currentStep}
               onChange={async (e) => {
-                await apiCall(`/proposals/${proposal!.id}/step`, { method: 'PUT', body: JSON.stringify({ step: (e.target as HTMLSelectElement).value }) });
-                await fetchData();
+                try {
+                  const step = (e.target as HTMLSelectElement).value;
+                  const updated = await apiCall(`/proposals/${proposal!.id}/step`, { method: 'PUT', body: JSON.stringify({ step }) });
+                  setProposal(updated);
+                  toast({ title: 'Step set', description: `Now in ${getStepName(updated.currentStep)}` });
+                  document.getElementById('step-section')?.scrollIntoView({ behavior: 'smooth' });
+                } catch (err: any) {
+                  toast({ title: 'Failed to set step', description: err.message, variant: 'destructive' });
+                }
               }}
             >
               <option value="proposal_presentation">Proposal Presentation</option>
@@ -310,6 +317,7 @@ export default function Proposal() {
         </Card>
       )}
 
+      <div id="step-section" />
       {/* Step-specific content */}
       {proposal.currentStep === 'clarifying_questions' && (
         <Card>
