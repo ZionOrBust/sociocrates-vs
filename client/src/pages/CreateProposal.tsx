@@ -84,6 +84,9 @@ export default function CreateProposal() {
         description: error.message,
         variant: 'destructive',
       });
+      if (error.message.includes('member of this circle')) {
+        toast({ title: 'Join required', description: 'Please join the circle before proposing.' });
+      }
     } finally {
       setLoading(false);
     }
