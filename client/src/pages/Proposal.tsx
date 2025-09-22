@@ -19,11 +19,20 @@ interface Proposal {
   createdBy: string;
 }
 
+interface Answer {
+  id: string;
+  questionId: string;
+  answer: string;
+  userId: string;
+  createdAt: string;
+}
+
 interface Question {
   id: string;
   question: string;
   userId: string;
   createdAt: string;
+  answers?: Answer[];
 }
 
 interface Reaction {
@@ -64,6 +73,7 @@ export default function Proposal() {
 
   // Form states
   const [newQuestion, setNewQuestion] = useState('');
+  const [answerInputs, setAnswerInputs] = useState<Record<string, string>>({});
   const [newReaction, setNewReaction] = useState('');
   const [newObjection, setNewObjection] = useState('');
   const [objectionSeverity, setObjectionSeverity] = useState<'minor_concern' | 'major_concern' | 'deal_breaker'>('minor_concern');
@@ -332,11 +342,52 @@ export default function Proposal() {
           </CardHeader>
           <CardContent className="space-y-4">
             {questions.map((question) => (
-              <div key={question.id} className="border-l-4 border-blue-400 pl-4 py-2">
+              <div key={question.id} className="border-l-4 border-blue-400 pl-4 py-3 space-y-2">
                 <p className="text-gray-800">{question.question}</p>
-                <p className="text-sm text-gray-500 mt-1">
-                  Asked {formatDateTime(question.createdAt)}
-                </p>
+                <p className="text-sm text-gray-500">Asked {formatDateTime(question.createdAt)}</p>
+
+                {question.answers && question.answers.length > 0 && (
+                  <div className="ml-2 border-l-2 border-gray-200 pl-3 space-y-2">
+                    {question.answers.map((a) => (
+                      <div key={a.id} className="bg-gray-50 border rounded-md p-2">
+                        <p className="text-gray-800">{a.answer}</p>
+                        <p className="text-xs text-gray-500 mt-1">Answered {formatDateTime(a.createdAt)}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {(user?.role === 'admin' || user?.id === proposal.createdBy) && (
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      const text = (answerInputs[question.id] || '').trim();
+                      if (!text) return;
+                      try {
+                        const created = await apiCall(`/proposals/${proposal.id}/questions/${question.id}/answers`, {
+                          method: 'POST',
+                          body: JSON.stringify({ answer: text })
+                        });
+                        setQuestions((prev) => prev.map(q => q.id === question.id ? { ...q, answers: [...(q.answers || []), created] } : q));
+                        setAnswerInputs((m) => ({ ...m, [question.id]: '' }));
+                        toast({ title: 'Answer posted', description: 'Your answer has been added' });
+                      } catch (err: any) {
+                        toast({ title: 'Failed to answer', description: err.message, variant: 'destructive' });
+                      }
+                    }}
+                    className="pt-1"
+                  >
+                    <Input
+                      value={answerInputs[question.id] || ''}
+                      onChange={(e) => setAnswerInputs((m) => ({ ...m, [question.id]: e.target.value }))}
+                      placeholder="Answer this question..."
+                      className="mt-1"
+                    />
+                    <div className="mt-2">
+                      <Button type="submit" size="sm" disabled={!((answerInputs[question.id] || '').trim())}>Answer</Button>
+                    </div>
+                  </form>
+                )}
               </div>
             ))}
             
