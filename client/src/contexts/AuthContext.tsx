@@ -12,6 +12,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
+  updateProfile: (updates: { email?: string; name?: string }) => Promise<void>;
   loading: boolean;
 }
 
@@ -117,6 +118,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser(null);
   };
 
+  const updateProfile = async (updates: { email?: string; name?: string }) => {
+    const resp = await apiCall('/auth/me', {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+    setUser(resp.user);
+  };
+
   useEffect(() => {
     checkAuth();
   }, []);
@@ -126,6 +135,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     login,
     register,
     logout,
+    updateProfile,
     loading,
   };
 
