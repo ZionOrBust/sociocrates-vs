@@ -17,7 +17,7 @@
     "db:migrate": "cd client && npm run db:migrate",
     "db:studio": "cd client && npm run db:studio",
     "deploy": "npm run build && npm run db:push",
-    "vercel-build": "npm run build"
+    "vercel-build": "npm run build --prefix client"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",
