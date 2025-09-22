@@ -525,25 +525,27 @@ export default function Proposal() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {consents.map((consent) => (
-              <div key={consent.id} className="border-l-4 border-emerald-400 pl-4 py-2">
-                <div className="flex items-center space-x-2 mb-1">
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    consent.choice === 'consent' ? 'bg-green-100 text-green-800' :
-                    consent.choice === 'consent_with_reservations' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
-                    {consent.choice.replace(/_/g, ' ')}
-                  </span>
+            {(() => {
+              const consentCount = consents.filter(c => c.choice === 'consent').length;
+              const reservedCount = consents.filter(c => c.choice === 'consent_with_reservations').length;
+              const withholdCount = consents.filter(c => c.choice === 'withhold_consent').length;
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="rounded-lg border p-4 bg-emerald-50">
+                    <div className="text-sm text-emerald-700">Consented</div>
+                    <div className="text-3xl font-bold text-emerald-800">{consentCount}</div>
+                  </div>
+                  <div className="rounded-lg border p-4 bg-yellow-50">
+                    <div className="text-sm text-yellow-700">Consented with reservations</div>
+                    <div className="text-3xl font-bold text-yellow-800">{reservedCount}</div>
+                  </div>
+                  <div className="rounded-lg border p-4 bg-red-50">
+                    <div className="text-sm text-red-700">Withhold consent</div>
+                    <div className="text-3xl font-bold text-red-800">{withholdCount}</div>
+                  </div>
                 </div>
-                {consent.reason && (
-                  <p className="text-gray-800 mb-1">{consent.reason}</p>
-                )}
-                <p className="text-sm text-gray-500">
-                  Decided {formatDateTime(consent.createdAt)}
-                </p>
-              </div>
-            ))}
+              );
+            })()}
             
             {!userHasSubmittedConsent && user?.role !== 'observer' && (
               <form onSubmit={handleSubmitConsent} className="mt-4">
