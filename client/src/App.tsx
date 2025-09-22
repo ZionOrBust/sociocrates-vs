@@ -8,6 +8,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Proposal from './pages/Proposal';
 import Admin from './pages/Admin';
+import AdminSettings from './pages/AdminSettings';
 import CreateProposal from './pages/CreateProposal';
 import Account from './pages/Account';
 import Circle from './pages/Circle';
@@ -16,6 +17,21 @@ import { Toaster } from './components/ui/toaster';
 
 function AppContent() {
   const { user, loading } = useAuth();
+  useEffect(() => {
+    (async () => {
+      if (user?.role === 'admin') {
+        try {
+          const resp = await fetch('/api/orgs/me', { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` } });
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data.requiresSetup) {
+              window.location.hash = '/admin/settings';
+            }
+          }
+        } catch {}
+      }
+    })();
+  }, [user?.id]);
 
   if (loading) {
     return (
@@ -51,7 +67,10 @@ function AppContent() {
           <Route path="/circles/:id" component={Circle} />
           <Route path="/account" component={Account} />
           {user.role === 'admin' ? (
-            <Route path="/admin" component={Admin} />
+            <>
+              <Route path="/admin/settings" component={AdminSettings} />
+              <Route path="/admin" component={Admin} />
+            </>
           ) : (
             <Route path="/admin">
               <div className="text-center py-8">
