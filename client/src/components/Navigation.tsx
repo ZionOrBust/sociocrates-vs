@@ -58,15 +58,26 @@ export default function Navigation() {
               </Button>
 
               {user?.role === 'admin' && (
-                <Button asChild
-                  variant={isActive('/admin') ? "default" : "ghost"}
-                  className="flex items-center space-x-2"
-                >
-                  <Link href="/admin">
-                    <Settings className="w-4 h-4" />
-                    <span>Admin</span>
-                  </Link>
-                </Button>
+                <>
+                  <Button asChild
+                    variant={isActive('/admin/settings') ? "default" : "ghost"}
+                    className="flex items-center space-x-2"
+                  >
+                    <Link href="/admin/settings">
+                      <Settings className="w-4 h-4" />
+                      <span>Admin Settings</span>
+                    </Link>
+                  </Button>
+                  <Button asChild
+                    variant={isActive('/admin') ? "default" : "ghost"}
+                    className="flex items-center space-x-2"
+                  >
+                    <Link href="/admin">
+                      <Settings className="w-4 h-4" />
+                      <span>Admin</span>
+                    </Link>
+                  </Button>
+                </>
               )}
             </div>
           </div>
@@ -123,12 +134,20 @@ export default function Navigation() {
           </Button>
 
           {user?.role === 'admin' && (
-            <Button asChild
-              variant={isActive('/admin') ? "default" : "ghost"}
-              size="sm"
-            >
-              <Link href="/admin">Admin</Link>
-            </Button>
+            <>
+              <Button asChild
+                variant={isActive('/admin/settings') ? "default" : "ghost"}
+                size="sm"
+              >
+                <Link href="/admin/settings">Admin Settings</Link>
+              </Button>
+              <Button asChild
+                variant={isActive('/admin') ? "default" : "ghost"}
+                size="sm"
+              >
+                <Link href="/admin">Admin</Link>
+              </Button>
+            </>
           )}
         </div>
       </div>
