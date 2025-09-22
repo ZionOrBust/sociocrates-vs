@@ -47,6 +47,16 @@ export default function Navigation() {
                 </Link>
               </Button>
               
+              <Button asChild
+                variant={isActive('/account') ? "default" : "ghost"}
+                className="flex items-center space-x-2"
+              >
+                <Link href="/account">
+                  <Users className="w-4 h-4" />
+                  <span>Account</span>
+                </Link>
+              </Button>
+
               {user?.role === 'admin' && (
                 <Button asChild
                   variant={isActive('/admin') ? "default" : "ghost"}
@@ -105,6 +115,13 @@ export default function Navigation() {
             <Link href="/create-proposal">New Proposal</Link>
           </Button>
           
+          <Button asChild
+            variant={isActive('/account') ? "default" : "ghost"}
+            size="sm"
+          >
+            <Link href="/account">Account</Link>
+          </Button>
+
           {user?.role === 'admin' && (
             <Button asChild
               variant={isActive('/admin') ? "default" : "ghost"}
