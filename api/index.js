@@ -2,6 +2,7 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { neon } from "@neondatabase/serverless";
+import { nanoid } from 'nanoid';
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
 const sql = neon(process.env.DATABASE_URL);
@@ -21,6 +22,7 @@ function toCamel(row) {
     is_active: 'isActive',
     user_id: 'userId',
     proposal_id: 'proposalId',
+    question_id: 'questionId',
   };
   const out = {};
   for (const k of Object.keys(row)) out[map[k] || k] = row[k];
@@ -256,11 +258,45 @@ app.post('/proposals/:id/advance', authenticateToken, async (req, res) => {
   }
 });
 
-// Proposal process endpoints (simplified stubs for now)
+// Ensure answers table exists (id text to avoid uuid extension dependency)
+async function ensureAnswersTable() {
+  try {
+    await sql`create table if not exists clarifying_question_answers (
+      id text primary key,
+      question_id uuid not null references clarifying_questions(id) on delete cascade,
+      user_id uuid not null references users(id),
+      answer text not null,
+      created_at timestamp default now() not null
+    )`;
+  } catch (e) { /* noop */ }
+}
+ensureAnswersTable();
+
+// Questions with answers embedded
 app.get('/proposals/:proposalId/questions', authenticateToken, async (req, res) => {
   try {
-    const rows = await sql`select id, proposal_id, user_id, question, created_at from clarifying_questions where proposal_id = ${req.params.proposalId} order by created_at asc`;
-    res.json(rows.map(toCamel));
+    const qs = await sql`select id, proposal_id, user_id, question, created_at from clarifying_questions where proposal_id = ${req.params.proposalId} order by created_at asc`;
+    const questions = qs.map(toCamel);
+    if (questions.length === 0) return res.json(questions);
+    const ids = questions.map(q => q.id);
+    // Neon expands arrays in templates
+    const ansRows = await sql`select id, question_id, user_id, answer, created_at from clarifying_question_answers where question_id = any(${ids}::uuid[]) order by created_at asc`.catch(async () => {
+      // Fallback per-question if array casting not supported
+      const out = [];
+      for (const q of questions) {
+        const r = await sql`select id, question_id, user_id, answer, created_at from clarifying_question_answers where question_id = ${q.id} order by created_at asc`;
+        out.push(...r);
+      }
+      return out;
+    });
+    const answers = (ansRows || []).map(toCamel);
+    const byQ = new Map();
+    for (const a of answers) {
+      if (!byQ.has(a.questionId)) byQ.set(a.questionId, []);
+      byQ.get(a.questionId).push(a);
+    }
+    const withAnswers = questions.map(q => ({ ...q, answers: byQ.get(q.id) || [] }));
+    res.json(withAnswers);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch questions' });
   }
@@ -273,6 +309,24 @@ app.post('/proposals/:proposalId/questions', authenticateToken, async (req, res)
     res.json(toCamel(rows[0]));
   } catch (err) {
     res.status(500).json({ message: 'Failed to add question' });
+  }
+});
+
+// Proposer (or admin) answers a question
+app.post('/proposals/:proposalId/questions/:questionId/answers', authenticateToken, async (req, res) => {
+  try {
+    const { answer } = req.body;
+    if (!answer || typeof answer !== 'string') return res.status(400).json({ message: 'Answer is required' });
+    const rows = await sql`select p.created_by from proposals p join clarifying_questions q on q.id = ${req.params.questionId} and q.proposal_id = p.id limit 1`;
+    if (rows.length === 0) return res.status(404).json({ message: 'Question not found' });
+    const isOwner = rows[0].created_by === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+    if (!isOwner && !isAdmin) return res.status(403).json({ message: 'Only proposer or admin can answer' });
+    const id = nanoid(12);
+    const inserted = await sql`insert into clarifying_question_answers (id, question_id, user_id, answer) values (${id}, ${req.params.questionId}, ${req.user.id}, ${answer}) returning id, question_id, user_id, answer, created_at`;
+    res.json(toCamel(inserted[0]));
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to submit answer' });
   }
 });
 app.get('/proposals/:proposalId/reactions', authenticateToken, async (req, res) => {
