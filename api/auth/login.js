@@ -40,6 +40,14 @@ export default async function handler(req, res) {
     const { email, password } = await readJson(req);
     if (!email || !password) return res.status(400).json({ message: 'Email and password are required' });
 
+    // Demo users take precedence to guarantee working creds regardless of DB state
+    const demo = demoUsers[email];
+    if (demo && password === demo.password) {
+      const { password: _omit, ...u } = demo;
+      const token = jwt.sign({ userId: u.id, user: u }, JWT_SECRET, { expiresIn: '7d' });
+      return res.status(200).json({ user: u, token });
+    }
+
     // Try DB-backed auth if configured; fall back to demo on any failure
     if (DB_URL) {
       try {
@@ -61,10 +69,9 @@ export default async function handler(req, res) {
       }
     }
 
-    // Demo-mode fallback (no DB or DB error)
-    const demo = demoUsers[email];
+    // Final fallback: demo users (in case DB_URL empty or DB error above)
     if (demo && password === demo.password) {
-      const { password: _omit, ...u } = demo;
+      const { password: _omit2, ...u } = demo;
       const token = jwt.sign({ userId: u.id, user: u }, JWT_SECRET, { expiresIn: '7d' });
       return res.status(200).json({ user: u, token });
     }
