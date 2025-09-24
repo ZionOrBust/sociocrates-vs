@@ -106,15 +106,18 @@ export default async function handler(req, res) {
     if (user.role !== 'admin') {
       return res.status(403).json({ message: 'Admin access required' });
     }
+
+    const body = await readJson(req);
+    const name = (body?.name || '').trim();
+    const description = body?.description || '';
+    if (!name) return res.status(400).json({ message: 'Name is required' });
+
+    if (!DB_URL) {
+      // Demo mode: acknowledge but not persist
+      return res.status(201).json({ id: 'demo-circle', name, description, createdBy: user.id, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    }
+
     try {
-      const { name, description } = await readJson(req);
-      if (!name) return res.status(400).json({ message: 'Name is required' });
-
-      if (!DB_URL) {
-        // Demo mode: acknowledge but not persist
-        return res.status(200).json({ id: 'demo-circle', name, description: description || '', createdBy: user.id, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
-      }
-
       const sql = neon(DB_URL);
       // Ensure circles table exists
       await sql`create table if not exists circles (
@@ -128,7 +131,7 @@ export default async function handler(req, res) {
       )`;
 
       const id = nanoid();
-      const created = await sql`insert into circles (id, name, description, created_by, is_active) values (${id}, ${name}, ${description || ''}, ${user.id}, true) returning id, name, description, created_by, is_active, created_at, updated_at`;
+      const created = await sql`insert into circles (id, name, description, created_by, is_active) values (${id}, ${name}, ${description}, ${user.id}, true) returning id, name, description, created_by, is_active, created_at, updated_at`;
       const circle = created[0];
       // Attach to org if any
       try {
@@ -138,7 +141,7 @@ export default async function handler(req, res) {
         }
       } catch {}
 
-      return res.status(200).json({
+      return res.status(201).json({
         id: circle.id,
         name: circle.name,
         description: circle.description,
@@ -149,7 +152,7 @@ export default async function handler(req, res) {
       });
     } catch (e) {
       // Demo fallback on DB errors so UI can continue without persistence
-      return res.status(200).json({ id: 'demo-circle', name: name || 'New Circle', description: description || '', createdBy: user.id, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+      return res.status(201).json({ id: 'demo-circle', name, description, createdBy: user.id, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
     }
   }
 
