@@ -1,5 +1,4 @@
-import { neon } from "@neondatabase/serverless";
-import { neon } from "@neondatabase/serverless";
+import { neon as neonClient } from "@neondatabase/serverless";
 import jwt from "jsonwebtoken";
 import { nanoid } from "nanoid";
 
@@ -41,7 +40,7 @@ async function getUserFromToken(req, res) {
     const user = { id: decoded.userId, role: 'participant' };
     if (DB_URL && decoded.userId) {
       try {
-        const sql = neon(DB_URL);
+        const sql = neonClient(DB_URL);
         const rows = await sql`select id, email, name, role from users where id = ${decoded.userId} limit 1`;
         if (rows.length) return { ...rows[0] };
       } catch {}
@@ -70,7 +69,7 @@ export default async function handler(req, res) {
       return res.end(JSON.stringify([]));
     }
     try {
-      const sql = neon(DB_URL);
+      const sql = neonClient(DB_URL);
       // Ensure circles table exists (minimal schema, no FKs to avoid dependency issues)
       await sql`create table if not exists circles (
         id text primary key,
@@ -118,7 +117,7 @@ export default async function handler(req, res) {
     }
 
     try {
-      const sql = neon(DB_URL);
+      const sql = neonClient(DB_URL);
       // Ensure circles table exists
       await sql`create table if not exists circles (
         id text primary key,
