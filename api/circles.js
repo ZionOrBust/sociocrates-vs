@@ -1,4 +1,5 @@
 import { neon } from "@neondatabase/serverless";
+import { neon } from "@neondatabase/serverless";
 import jwt from "jsonwebtoken";
 import { nanoid } from "nanoid";
 
