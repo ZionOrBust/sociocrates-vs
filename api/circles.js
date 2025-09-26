@@ -150,8 +150,8 @@ export default async function handler(req, res) {
         updatedAt: circle.updated_at,
       });
     } catch (e) {
-      // Demo fallback on DB errors so UI can continue without persistence
-      return res.status(201).json({ id: 'demo-circle', name, description, createdBy: user.id, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+      console.error('Circle insert failed:', e);
+      return res.status(500).json({ message: 'DB insert failed', error: e && e.message ? e.message : String(e) });
     }
   }
 
