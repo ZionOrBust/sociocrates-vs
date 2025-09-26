@@ -5,7 +5,16 @@
   "outputDirectory": "client/dist",
   "functions": {
     "api/[...all].js": {
-      "includeFiles": "api/**"
+      "runtime": "nodejs20.x",
+      "includeFiles": [
+        "api/auth/**",
+        "api/circles/**",
+        "api/proposals/**",
+        "api/admin/**",
+        "api/ping.js",
+        "api/circles.js",
+        "api/proposals.js"
+      ]
     }
   },
   "routes": [
