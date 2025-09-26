@@ -116,11 +116,16 @@ export default async function handler(req, res) {
     return res.status(204).end();
   }
 
-  const parts = Array.isArray(req.query?.all)
+  let parts = Array.isArray(req.query?.all)
     ? req.query.all
     : typeof req.query?.all === "string"
       ? [req.query.all]
       : [];
+
+  if (!parts.length && typeof req.url === 'string') {
+    const m = req.url.match(/^\/?api\/(.*?)(\?|$)/);
+    if (m && m[1]) parts = m[1].split('/').filter(Boolean);
+  }
 
   const key = normalize(parts);
   const method = (req.method || "GET").toUpperCase();
