@@ -75,11 +75,38 @@ function circlesList(req, res) {
   return res.status(200).json([]);
 }
 
+async function circlesCreate(req, res) {
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'GET, POST, OPTIONS');
+    return res.status(405).json({ message: 'Method Not Allowed' });
+  }
+  const parseBody = () => new Promise((resolve, reject) => {
+    if (req.body) {
+      try { return resolve(typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body); } catch { return reject(new Error('Invalid JSON')); }
+    }
+    let data = '';
+    req.on('data', (c) => { data += c; });
+    req.on('end', () => { try { resolve(data ? JSON.parse(data) : {}); } catch { reject(new Error('Invalid JSON')); } });
+    req.on('error', reject);
+  });
+  try {
+    const body = await parseBody();
+    const name = (body?.name || '').trim();
+    const description = body?.description || '';
+    if (!name) return res.status(400).json({ message: 'Name is required' });
+    const u = getUser(req) || { id: 'demo-user', role: 'admin' };
+    const now = new Date().toISOString();
+    return res.status(201).json({ id: 'demo-' + Math.random().toString(36).slice(2, 10), name, description, createdBy: u.id, isActive: true, createdAt: now, updatedAt: now });
+  } catch (e) {
+    return res.status(400).json({ message: 'Invalid JSON' });
+  }
+}
+
 const routes = {
   "/auth/login": { POST: loginHandler },
   "/auth/me": { GET: authMe },
   "/orgs/me": { GET: orgsMe },
-  "/circles": { GET: circlesList },
+  "/circles": { GET: circlesList, POST: circlesCreate },
 };
 
 export default async function handler(req, res) {
