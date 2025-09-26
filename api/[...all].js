@@ -72,8 +72,7 @@ function circlesList(req, res) {
     res.setHeader('Allow', 'GET, OPTIONS');
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
-  const u = getUser(req);
-  if (!u) return res.status(401).json({ message: 'Access token required' });
+  // Demo: return empty list regardless of auth to avoid dashboard hard-fail
   return res.status(200).json([]);
 }
 
