@@ -1,11 +1,6 @@
 import authLogin from "./auth/login.js";
+import authLogin from "./auth/login.js";
 import jwt from "jsonwebtoken";
-import circles from "./circles.js";
-import proposals from "./proposals.js";
-import proposalById from "./proposals/[id].js";
-import circleProposals from "./circles/[id]/proposals.js";
-import adminUserUpdate from "./admin/users/[id].js";
-import ping from "./ping.js";
 
 function setCors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -56,12 +51,6 @@ function normalize(parts) {
 const routes = {
   "/auth/login": { POST: authLogin },
   "/auth/me": { GET: authMe },
-  "/circles": { GET: circles, POST: circles },
-  "/proposals": { GET: proposals },
-  "/proposals/_id": { GET: proposalById },
-  "/circles/_id/proposals": { GET: circleProposals },
-  "/admin/users/_id": { PUT: adminUserUpdate },
-  "/ping": { GET: ping },
 };
 
 export default async function handler(req, res) {
@@ -81,12 +70,8 @@ export default async function handler(req, res) {
   const method = (req.method || "GET").toUpperCase();
   const methodMap = routes[key];
 
-  // Attach dynamic params expected by downstream handlers
-  const q = { ...(req.query || {}) };
-  if (key === "/proposals/_id") q.id = parts[1];
-  if (key === "/admin/users/_id") q.id = parts[2];
-  if (key === "/circles/_id/proposals") q.id = parts[1];
-  req.query = q;
+  // No dynamic params required for auth routes
+  req.query = req.query || {};
 
   if (!methodMap) {
     res.setHeader("X-Debug-Route", key);
