@@ -70,17 +70,6 @@ export default async function handler(req, res) {
     }
     try {
       const sql = neonClient(DB_URL);
-      // Ensure circles table exists (minimal schema, no FKs to avoid dependency issues)
-      await sql`create table if not exists circles (
-        id text primary key,
-        name text not null,
-        description text default '' not null,
-        created_by text not null,
-        is_active boolean default true not null,
-        created_at timestamp default now() not null,
-        updated_at timestamp default now() not null
-      )`;
-
       const rows = await sql`
         select * from circles where created_by = ${user.id}
         order by created_at desc`;
@@ -118,19 +107,7 @@ export default async function handler(req, res) {
 
     try {
       const sql = neonClient(DB_URL);
-      // Ensure circles table exists
-      await sql`create table if not exists circles (
-        id text primary key,
-        name text not null,
-        description text default '' not null,
-        created_by text not null,
-        is_active boolean default true not null,
-        created_at timestamp default now() not null,
-        updated_at timestamp default now() not null
-      )`;
-
-      const id = nanoid();
-      const created = await sql`insert into circles (id, name, description, created_by, is_active) values (${id}, ${name}, ${description}, ${user.id}, true) returning id, name, description, created_by, is_active, created_at, updated_at`;
+      const created = await sql`insert into circles (name, description, created_by, is_active) values (${name}, ${description}, ${user.id}, true) returning id, name, description, created_by, is_active, created_at, updated_at`;
       const circle = created[0];
       // Attach to org if any
       try {
