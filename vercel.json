@@ -3,6 +3,11 @@
   "installCommand": "npm install && npm install --prefix client",
   "buildCommand": "npm run build --prefix client",
   "outputDirectory": "client/dist",
+  "functions": {
+    "api/[...all].js": {
+      "includeFiles": "api/**"
+    }
+  },
   "routes": [
     { "src": "/dashboard", "status": 308, "headers": { "Location": "/#/dashboard" } },
     { "src": "/circles/(.*)", "status": 308, "headers": { "Location": "/#/circles/$1" } },
