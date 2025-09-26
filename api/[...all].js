@@ -1,5 +1,4 @@
-import authLogin from "./auth/login.js";
-import authLogin from "./auth/login.js";
+import loginHandler from "./auth/login.js";
 import jwt from "jsonwebtoken";
 
 function setCors(res) {
@@ -77,7 +76,7 @@ function circlesList(req, res) {
 }
 
 const routes = {
-  "/auth/login": { POST: authLogin },
+  "/auth/login": { POST: loginHandler },
   "/auth/me": { GET: authMe },
   "/orgs/me": { GET: orgsMe },
   "/circles": { GET: circlesList },
