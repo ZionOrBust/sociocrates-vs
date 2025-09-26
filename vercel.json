@@ -1,21 +1,17 @@
 {
-  "version": 2,
-  "installCommand": "npm install && npm install --prefix client",
-  "buildCommand": "npm run build --prefix client",
-  "outputDirectory": "client/dist",
-  "functions": {
-    "api/[...all].js": {
-      "includeFiles": "api/**"
-    }
-  },
-  "routes": [
-    { "src": "/dashboard", "status": 308, "headers": { "Location": "/#/dashboard" } },
-    { "src": "/circles/(.*)", "status": 308, "headers": { "Location": "/#/circles/$1" } },
-    { "src": "/proposal/(.*)", "status": 308, "headers": { "Location": "/#/proposal/$1" } },
-    { "src": "/create-proposal", "status": 308, "headers": { "Location": "/#/create-proposal" } },
-    { "src": "/admin", "status": 308, "headers": { "Location": "/#/admin" } },
-    { "src": "/api/(.*)", "dest": "/api/[...all].js" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
-  ]
+"version": 2,
+"installCommand": "npm install && npm install --prefix client",
+"buildCommand": "npm run build --prefix client",
+"outputDirectory": "client/dist",
+"functions": { "api/[...all].js": { "includeFiles": "api/**" } },
+"routes": [
+{ "src": "/dashboard", "status": 308, "headers": { "Location": "/#/dashboard" } },
+{ "src": "/circles/(.)", "status": 308, "headers": { "Location": "/#/circles/$1" } },
+{ "src": "/proposal/(.)", "status": 308, "headers": { "Location": "/#/proposal/$1" } },
+{ "src": "/create-proposal", "status": 308, "headers": { "Location": "/#/create-proposal" } },
+{ "src": "/admin", "status": 308, "headers": { "Location": "/#/admin" } },
+{ "src": "/api/(.)", "dest": "/api/[...all].js" },
+{ "handle": "filesystem" },
+{ "src": "/(.)", "dest": "/index.html" }
+]
 }
