@@ -5,7 +5,6 @@
   "outputDirectory": "client/dist",
   "functions": {
     "api/[...all].js": {
-      "runtime": "nodejs20.x",
       "includeFiles": "api/**"
     }
   },
