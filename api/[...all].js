@@ -74,5 +74,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "Method not allowed", route: key, got: method, allow });
   }
 
-  return methodMap[method](req, res);
+  try {
+    return await methodMap[method](req, res);
+  } catch (e) {
+    console.error("[ROUTER_ERROR]", { route: key, method, error: e && e.message ? e.message : String(e) });
+    if (!res.headersSent) {
+      res.setHeader("Content-Type", "application/json");
+      return res.status(500).json({ message: "Server error", route: key });
+    }
+  }
 }
