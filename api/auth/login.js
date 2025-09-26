@@ -40,20 +40,13 @@ export default async function handler(req, res) {
     const { email, password } = await readJson(req);
     if (!email || !password) return res.status(400).json({ message: 'Email and password are required' });
 
-    // Demo users take precedence to guarantee working creds regardless of DB state
-    const demo = demoUsers[email];
-    if (demo && password === demo.password) {
-      const { password: _omit, ...u } = demo;
-      const token = jwt.sign({ userId: u.id, user: u }, JWT_SECRET, { expiresIn: '7d' });
-      return res.status(200).json({ user: u, token });
-    }
-
-    // Try DB-backed auth if configured; fall back to demo on any failure
+    // DB-first when a database is configured
     if (DB_URL) {
       try {
         const sql = neon(DB_URL);
         const rows = await sql`select id, email, name, role, password from users where email = ${email} limit 1`;
         let user = rows[0];
+        // Auto-provision demo users into DB to keep known creds working
         if (!user && (email in demoUsers)) {
           const hash = await bcrypt.hash('password', 10);
           const created = await sql`insert into users (email, password, name, role) values (${email}, ${hash}, ${demoUsers[email].name}, ${demoUsers[email].role}) returning id, email, name, role, password`;
@@ -62,16 +55,18 @@ export default async function handler(req, res) {
         if (!user) return res.status(401).json({ message: 'Invalid credentials' });
         const ok = await bcrypt.compare(password, user.password);
         if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
+        // IMPORTANT: only embed userId in token to avoid non-UUID ids
         const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
         return res.status(200).json({ user: { id: user.id, email: user.email, name: user.name, role: user.role }, token });
       } catch (e) {
-        // fall through to demo-mode below
+        // fall through to demo-mode below if DB fails
       }
     }
 
-    // Final fallback: demo users (in case DB_URL empty or DB error above)
+    // Demo fallback (no DB configured or DB error)
+    const demo = demoUsers[email];
     if (demo && password === demo.password) {
-      const { password: _omit2, ...u } = demo;
+      const { password: _omit, ...u } = demo;
       const token = jwt.sign({ userId: u.id, user: u }, JWT_SECRET, { expiresIn: '7d' });
       return res.status(200).json({ user: u, token });
     }
